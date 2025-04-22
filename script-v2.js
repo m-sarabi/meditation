@@ -30,6 +30,21 @@ function updateDisplay() {
     timerDisplay.textContent = formatTime(remainingTime);
 }
 
+function saveSettings(key, value) {
+    localStorage.setItem(key, value);
+}
+
+function loadSettings(key, defaultValue) {
+    return localStorage.getItem(key) || defaultValue;
+}
+
+async function ensureAudioContext() {
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume().catch(error => {
+            console.error('Error resuming audio context:', error);
+        });
+    }
+}
 
 // seamless bg sound using Web Audio API
 const audioContext = new AudioContext();
@@ -49,14 +64,10 @@ async function loadAudioBuffer(src) {
     }
 }
 
-function playBuffer(buffer) {
+async function playBuffer(buffer) {
     if (!buffer) return;
 
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(error => {
-            console.error('Error resuming audio context:', error);
-        });
-    }
+    await ensureAudioContext()
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContext.destination);
@@ -84,11 +95,7 @@ async function loadBgSound(src) {
     bgSound.connect(gainNode);
     bgSound.loop = true;
 
-    if (audioContext.state === 'suspended') {
-        await audioContext.resume().catch(error => {
-            console.error('Error resuming audio context:', error);
-        });
-    }
+    await ensureAudioContext();
 
     bgSound.start(0);
     gainNode.gain.value = bgVolume.value / 200;
@@ -116,7 +123,23 @@ function easeInOut(durations) {
     return transitionStrings.join(', ');
 }
 
-function breathingCycle() {
+async function breathingCycle() {
+    /**
+     * Updates the breath state label and handles its fade-in and fade-out transitions.
+     *
+     * @param {string} label - The text to display for the current breath state.
+     * @param {number} duration - The duration for the fade-out transition.
+     */
+    function setBreathState(label, duration) {
+        breathState.textContent = label;
+        breathState.style.transition = easeInOut(0.3);
+        breathState.style.opacity = `1`;
+        setTimeout(() => {
+            breathState.style.transition = easeInOut(duration);
+            breathState.style.opacity = `0`;
+        }, 500);
+    }
+
     if (!isRunning || remainingTime <= 0) {
         breathState.style.transition = easeInOut(0.3);
         breathState.style.opacity = '0'; // Hide state text
@@ -129,19 +152,9 @@ function breathingCycle() {
     const hold = parseInt(holdInput.value);
     const exhale = parseInt(exhaleInput.value);
 
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(error => {
-            console.error('Error resuming audio context:', error);
-        });
-    }
+    await ensureAudioContext();
 
-    breathState.textContent = 'Inhale';
-    breathState.style.transition = easeInOut(0.3);
-    breathState.style.opacity = `1`;
-    setTimeout(() => {
-        breathState.style.transition = easeInOut(inhale);
-        breathState.style.opacity = `0`;
-    }, 500);
+    setBreathState('Inhale', inhale);
     circle.style.transition = easeInOut(inhale);
     circle.style.transform = 'scale(1)';
     if (inhaleSoundToggle.checked) {
@@ -151,23 +164,11 @@ function breathingCycle() {
     breathTimer = setTimeout(() => {
         if (!isRunning || remainingTime <= 0) return;
 
-        breathState.textContent = 'Hold';
-        breathState.style.transition = easeInOut(0.3);
-        breathState.style.opacity = `1`;
-        setTimeout(() => {
-            breathState.style.transition = easeInOut(hold);
-            breathState.style.opacity = `0`;
-        }, 500);
+        setBreathState('Hold', hold);
         breathTimer = setTimeout(() => {
             if (!isRunning || remainingTime <= 0) return;
 
-            breathState.textContent = 'Exhale';
-            breathState.style.transition = easeInOut(0.3);
-            breathState.style.opacity = `1`;
-            setTimeout(() => {
-                breathState.style.transition = easeInOut(exhale);
-                breathState.style.opacity = `0`;
-            }, 500);
+            setBreathState('Exhale', exhale);
             circle.style.transition = easeInOut(exhale);
             circle.style.transform = 'scale(0.75)';
             if (exhaleSoundToggle.checked) {
@@ -186,11 +187,7 @@ async function startSession() {
     isRunning = true;
     startStopBtn.textContent = 'Stop';
 
-    if (audioContext.state === 'suspended') {
-        await audioContext.resume().catch(error => {
-            console.error('Error resuming audio context:', error);
-        });
-    }
+    await ensureAudioContext();
 
     if (!inhaleSound) {
         inhaleSound = await loadAudioBuffer('sounds/inhale.mp3');
@@ -244,13 +241,9 @@ function stopSession() {
     updateDisplay();
 }
 
-startStopBtn.addEventListener('click', () => {
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(error => {
-            console.error('Error resuming audio context:', error);
-        });
-    }
-    isRunning ? stopSession() : startSession();
+startStopBtn.addEventListener('click', async () => {
+    await ensureAudioContext();
+    isRunning ? stopSession() : await startSession();
 });
 
 durationSelect.addEventListener('change', () => {
@@ -260,12 +253,12 @@ durationSelect.addEventListener('change', () => {
 });
 
 bgSoundSelect.addEventListener('change', async () => {
-    localStorage.setItem('bgSound', bgSoundSelect.value);
+    saveSettings('bgSound', bgSoundSelect.value);
     await loadBgSound(bgSoundSelect.value);
 });
 
 bgVolume.addEventListener('input', () => {
-    localStorage.setItem('bgVolume', bgVolume.value);
+    saveSettings('bgVolume', bgVolume.value);
     bgVolumeValue.textContent = `${bgVolume.value}%`;
     if (gainNode) {
         gainNode.gain.value = bgVolume.value / 200;
@@ -273,19 +266,19 @@ bgVolume.addEventListener('input', () => {
 });
 
 inhaleInput.addEventListener('change', () => {
-    localStorage.setItem('inhaleDuration', inhaleInput.value);
+    saveSettings('inhaleDuration', inhaleInput.value);
 });
 exhaleInput.addEventListener('change', () => {
-    localStorage.setItem('exhaleDuration', exhaleInput.value);
+    saveSettings('exhaleDuration', exhaleInput.value);
 });
 holdInput.addEventListener('change', () => {
-    localStorage.setItem('holdDuration', holdInput.value);
+    saveSettings('holdDuration', holdInput.value);
 });
 inhaleSoundToggle.addEventListener('change', () => {
-    localStorage.setItem('inhaleSoundToggle', inhaleSoundToggle.checked);
+    saveSettings('inhaleSoundToggle', inhaleSoundToggle.checked);
 });
 exhaleSoundToggle.addEventListener('change', () => {
-    localStorage.setItem('exhaleSoundToggle', exhaleSoundToggle.checked);
+    saveSettings('exhaleSoundToggle', exhaleSoundToggle.checked);
 });
 
 updateDisplay();
@@ -293,13 +286,13 @@ bgVolumeValue.textContent = `${bgVolume.value}%`;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // load settings
-    inhaleInput.value = localStorage.getItem('inhaleDuration') || inhaleInput.value;
-    exhaleInput.value = localStorage.getItem('exhaleDuration') || exhaleInput.value;
-    holdInput.value = localStorage.getItem('holdDuration') || holdInput.value;
-    inhaleSoundToggle.checked = localStorage.getItem('inhaleSoundToggle') === 'true' || inhaleSoundToggle.checked;
-    exhaleSoundToggle.checked = localStorage.getItem('exhaleSoundToggle') === 'true' || exhaleSoundToggle.checked;
-    bgSoundSelect.value = localStorage.getItem('bgSound') || bgSoundSelect.value;
-    bgVolume.value = localStorage.getItem('bgVolume') || bgVolume.value;
+    inhaleInput.value = loadSettings('inhaleDuration', inhaleInput.value);
+    exhaleInput.value = loadSettings('exhaleDuration', exhaleInput.value);
+    holdInput.value = loadSettings('holdDuration', holdInput.value);
+    inhaleSoundToggle.checked = loadSettings('inhaleSoundToggle', inhaleSoundToggle.checked) === 'true';
+    exhaleSoundToggle.checked = loadSettings('exhaleSoundToggle', exhaleSoundToggle.checked) === 'true';
+    bgSoundSelect.value = loadSettings('bgSound', bgSoundSelect.value);
+    bgVolume.value = loadSettings('bgVolume', bgVolume.value);
 
     if (gainNode) {
         gainNode.gain.value = bgVolume.value / 200;
