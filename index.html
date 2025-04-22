@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>StillMind – Meditation Helper</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-frame">
+    <h1>Funzen Meditation</h1>
+    <p class="tagline">Find your breath. Find your calm.</p>
+
+    <div class="circle" id="breatheCircle">
+        <p id="breathState" class="state-label">Ready</p>
+    </div>
+
+    <div class="controls">
+        <label>
+            Session:
+            <select id="duration">
+                <option value="60">1 Minute</option>
+                <option value="180">3 Minutes</option>
+                <option value="300" selected>5 Minutes</option>
+                <option value="600">10 Minutes</option>
+            </select>
+        </label>
+        <button id="startStopBtn">Start</button>
+    </div>
+
+    <div class="timer-display" id="timerDisplay">5:00</div>
+
+    <details class="settings">
+        <summary>⚙ Breathing Settings</summary>
+        <div class="settings-inner">
+            <label>Inhale Duration (sec):
+                <input type="number" id="inhaleDuration" value="4" min="1"/>
+            </label>
+            <label>Hold Duration (sec):
+                <input type="number" id="holdDuration" value="7" min="0"/>
+            </label>
+            <label>Exhale Duration (sec):
+                <input type="number" id="exhaleDuration" value="8" min="1"/>
+            </label>
+            <hr/>
+            <input type="checkbox" id="inhaleSoundToggle" checked>
+            <label for="inhaleSoundToggle">Inhale Sound</label>
+            <input type="checkbox" id="exhaleSoundToggle" checked>
+            <label for="exhaleSoundToggle">Exhale Sound</label>
+            <label>
+                Background Sound:
+                <select id="bgSound">
+                    <option value="">None</option>
+                    <option value="sounds/rain.mp3">Morning Rain</option>
+<!--                    <option value="sounds/waves.mp3">Waves</option>-->
+<!--                    <option value="sounds/wind.mp3">Wind</option>-->
+                </select>
+            </label>
+            <label>Background Volume: <input id="bgVolume" type="range" min="0" max="100"><span id="bgVolumeValue"></span></label>
+        </div>
+    </details>
+
+    <div class="quote" id="quote">
+        "Quiet the mind, and the soul will speak." – Ma Jaya Sati Bhagavati
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
