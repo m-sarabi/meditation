@@ -1,6 +1,22 @@
+@font-face {
+    font-family: 'Samim';
+    src: url('font/Samim.ttf') format('truetype');
+}
+
+:root {
+    --app-top-height: 0em;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: Samim, sans-serif;
+    font-weight: bolder;
     background: linear-gradient(to bottom, #e0f7fa, #f1f8e9);
     min-height: 100vh;
     display: flex;
@@ -9,37 +25,42 @@ body {
     color: #2e7d32;
 }
 
+input, select, button {
+    font-family: Samim, sans-serif;
+}
+
+#app-top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--app-top-height) - 1em);
+    display: flex;
+    align-items: center;
+    background-color: #81c784;
+    color: white;
+    padding: 0.5em;
+    z-index: 1001;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#app-top-bar h1 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
 .app-frame {
+    position: relative;
+    box-sizing: border-box;
     background: #ffffffdd;
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 24px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
+    max-width: min(400px, 95vw);
+    max-height: 90vh;
+    overflow: auto;
     width: 90%;
     text-align: center;
-}
-
-h1 {
-    font-size: 2.2rem;
-    margin-bottom: 0.2em;
-}
-
-p.tagline {
-    font-size: 1.1rem;
-    margin-bottom: 0.5em;
-    color: #4caf50;
-}
-
-@keyframes pulseShadow {
-    0% {
-        box-shadow: 0 0 10px #a5d6a7;
-    }
-    50% {
-        box-shadow: 0 0 20px #a5d6a7;
-    }
-    100% {
-        box-shadow: 0 0 10px #a5d6a7;
-    }
 }
 
 .circle {
@@ -51,9 +72,9 @@ p.tagline {
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow: 0 0 20px #a5d6a7;
     transform: scale(0.75);
     transition: transform 2s ease-in-out;
-    animation: pulseShadow 3s infinite; /* Add the pulsing shadow animation */
 }
 
 p.state-label {
@@ -88,25 +109,103 @@ button:hover {
 }
 
 .settings {
-    margin-top: 1.5em;
-    background: #f9fbe7;
-    border-radius: 12px;
-    padding: 0.5em;
-    text-align: left;
+    position: fixed;
+    top: calc(var(--app-top-height));
+    left: 0;
+    width: 80%;
+    max-width: 300px;
+    height: calc(100% - var(--app-top-height));
+    background: #f1f8e9;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    z-index: 1001;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+    font-size: 1rem;
+    color: #2e7d32;
+    padding: 0;
+    transform: translateX(-110%);
+    transition: transform 0.4s;
 }
 
-.settings summary {
-    font-weight: bold;
-    cursor: pointer;
+.settings.open {
+    transform: translateX(0);
 }
 
 .settings-inner {
-    margin-top: 0.5em;
+    padding: calc(1.5em + 40px) 1em 1em;
+    display: flex;
+    flex-direction: column;
 }
 
 .settings-inner label {
     display: block;
-    margin: 0.5em 0;
+    margin: 0.3em;
+}
+
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid #c8e6c9;
+}
+
+.sidebar-section h2 {
+    margin-bottom: 0.8em;
+    font-size: 1.1rem;
+    color: #388e3c;
+    border-inline-start: 5px solid #81c784;
+    padding-inline-start: 0.5em;
+}
+
+#sidebar-btn {
+    position: fixed;
+    top: calc(1em + var(--app-top-height));
+    left: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #81c784;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    padding: 0.5em;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    z-index: 1002;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s;
+}
+
+#sidebar-btn:has(+ .settings.open) {
+    background: #558b2f;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transform: rotate(90deg);
+}
+
+#sidebar-btn svg {
+    width: 30px;
+    height: 30px;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 1000;
+}
+
+#overlay.active {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .quote {
@@ -116,56 +215,62 @@ button:hover {
     color: #4e944f;
 }
 
-/* Hide the default checkbox */
 input[type="checkbox"] {
-    display: none; /* Hide the default checkbox */
+    display: none;
 }
 
-/* Style the label to create a custom checkbox */
 input[type="checkbox"] + label {
     position: relative;
-    padding-left: 30px; /* Space for the custom checkbox */
     cursor: pointer;
-    user-select: none; /* Prevent text selection */
+    user-select: none;
 }
 
-/* Create the custom checkbox appearance */
 input[type="checkbox"] + label:before {
     content: '';
     position: absolute;
-    left: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 20px; /* Width of the custom checkbox */
-    height: 20px; /* Height of the custom checkbox */
-    border: 2px solid #a5d6a7; /* Border color */
-    border-radius: 4px; /* Rounded corners */
-    background-color: white; /* Background color */
-    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition */
+    width: 20px;
+    height: 20px;
+    border: 2px solid #a5d6a7;
+    border-radius: 4px;
+    background-color: white;
 }
 
-/* Style for the checked state */
+input[type="checkbox"] + label:dir(ltr):before {
+    right: 0;
+}
+
+input[type="checkbox"] + label:dir(rtl):before {
+    left: 0;
+}
+
 input[type="checkbox"]:checked + label:before {
-    background-color: #a5d6a7; /* Change background when checked */
-    border-color: #a5d6a7; /* Change border color when checked */
+    background-color: #a5d6a7;
+    border-color: #a5d6a7;
 }
 
-/* Optional: Style for the checkmark */
 input[type="checkbox"]:checked + label:after {
     content: '';
     position: absolute;
-    left: 8px; /* Position the checkmark */
-    top: 3px; /* Position the checkmark */
-    width: 5px; /* Width of the checkmark */
-    height: 10px; /* Height of the checkmark */
-    border: solid white; /* Checkmark color */
-    border-width: 0 3px 3px 0; /* Checkmark shape */
-    transform: rotate(45deg); /* Rotate to form a checkmark */
+    top: 3px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
+
+input[type="checkbox"]:checked + label:dir(ltr):after {
+    right: 8px;
+}
+
+input[type="checkbox"]:checked + label:dir(rtl):after {
+    left: 8px;
 }
 
 input[type="range"] {
     -webkit-appearance: none;
-    width: 100px;
     height: 8px;
     background: #a5d6a7;
     border-radius: 5px;
@@ -206,4 +311,16 @@ input[type="range"]:hover {
 
 #bgVolumeValue {
     margin-left: 0.5em;
+}
+
+.settings-inner label + input, .settings-inner label + select {
+    margin-left: 0.8em;
+}
+
+#sidebar #version {
+    margin-top: auto;
+    width: 100%;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #a5d6a7;
 }
